@@ -717,32 +717,6 @@
 			confirmDeleteButton.focus();
 		});
 
-		function renderStudents() {
-			studentList.replaceChildren();
-			getStudents().forEach((student) => {
-				const item = document.createElement("li");
-				const photo = document.createElement("img");
-				const info = document.createElement("div");
-				const name = document.createElement("strong");
-				const detail = document.createElement("small");
-				const deleteButton = document.createElement("button");
-				photo.className = "student-list-photo";
-				photo.src = student.photo || "FOTO SISWA/esokkoloh.jpg";
-				photo.alt = `Foto siswa ${student.name}`;
-				info.className = "student-list-info";
-				name.textContent = student.name;
-				detail.textContent = `${student.nis} | ${student.className} | ${student.major}`;
-				deleteButton.type = "button";
-				deleteButton.className = "delete-student-button";
-				deleteButton.dataset.nis = student.nis;
-				deleteButton.textContent = "Hapus";
-				deleteButton.setAttribute("aria-label", `Hapus data ${student.name}`);
-				info.append(name, detail);
-				item.append(photo, info, deleteButton);
-				studentList.appendChild(item);
-			});
-		}
-
 		function closeDeleteModal() {
 			confirmModal.hidden = true;
 			historyIndexToDelete = null;
