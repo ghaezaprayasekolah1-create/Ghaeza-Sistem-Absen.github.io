@@ -46,6 +46,20 @@
 		.back-link { color: var(--navy); background: #edf2f8; }
 		.message { min-height: 18px; margin: 0; color: var(--green); font-size: 12px; font-weight: 700; }
 		.message.error { color: #b33a3a; }
+		.student-management { margin-top: 22px; }
+		.student-management h2 { margin: 0 0 6px; color: var(--navy); font-size: 23px; }
+		.student-list { display: grid; gap: 9px; margin: 18px 0 0; padding: 0; list-style: none; }
+		.student-list li { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--sky); border-radius: 8px; }
+		.student-list-info { display: grid; flex: 1; gap: 3px; min-width: 0; }
+		.student-list-info strong { overflow-wrap: anywhere; }
+		.student-list-info small { color: var(--muted); }
+		.student-list-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+		.edit-button, .delete-button { padding: 8px 12px; font-size: 12px; }
+		.delete-button { color: #b33a3a; background: var(--white); border: 1px solid #edcaca; }
+		.delete-button:hover { background: #fff3f3; }
+		.cancel-button { color: var(--navy); background: #edf2f8; }
+		.cancel-button:hover { background: #dfe8f3; }
+		.empty-list { margin: 18px 0 0; color: var(--muted); font-size: 13px; }
 
 		@media (max-width: 600px) {
 			body { padding: 20px 12px 36px; }
@@ -89,19 +103,34 @@
 					<input id="photo" name="photo" type="file" accept="image/*">
 				</div>
 				<div class="actions">
-					<button type="submit">Simpan Data Siswa</button>
+					<button id="submit-button" type="submit">Simpan Data Siswa</button>
+					<button id="cancel-edit" class="cancel-button" type="button" hidden>Batal Edit</button>
 					<a class="back-link" href="index.html">Kembali ke Absensi</a>
 					<p class="message" id="message" role="status"></p>
 				</div>
 			</form>
 		</section>
+
+		<section class="panel student-management" aria-labelledby="student-list-title">
+			<h2 id="student-list-title">Edit Profil / Data Siswa</h2>
+			<p class="intro">Pilih tombol Edit untuk mengubah data siswa yang sudah tersimpan.</p>
+			<ul class="student-list" id="student-list"></ul>
+			<p class="empty-list" id="empty-list">Belum ada data siswa.</p>
+		</section>
 	</main>
 
 	<script>
 		const studentsStorageKey = "dataSiswa";
+		const attendanceHistoryStorageKey = "riwayatPresensi";
 		const studentForm = document.getElementById("student-form");
 		const photoInput = document.getElementById("photo");
 		const message = document.getElementById("message");
+		const pageTitle = document.getElementById("page-title");
+		const submitButton = document.getElementById("submit-button");
+		const cancelEditButton = document.getElementById("cancel-edit");
+		const studentList = document.getElementById("student-list");
+		const emptyList = document.getElementById("empty-list");
+		let editingIndex = null;
 
 		function getStudents() {
 			try {
@@ -126,6 +155,130 @@
 			});
 		}
 
+		function saveStudents(students) {
+			localStorage.setItem(studentsStorageKey, JSON.stringify(students));
+		}
+
+		function getAttendanceHistory() {
+			try {
+				const history = JSON.parse(localStorage.getItem(attendanceHistoryStorageKey));
+				return Array.isArray(history) ? history : [];
+			} catch (error) {
+				return [];
+			}
+		}
+
+		function updateAttendanceHistory(previousNis, student) {
+			const history = getAttendanceHistory();
+			const updatedHistory = history.map((record) => record.nis === previousNis ? {
+				...record,
+				name: student.name,
+				nis: student.nis,
+				className: student.className,
+				major: student.major,
+				photo: student.photo || record.photo
+			} : record);
+			localStorage.setItem(attendanceHistoryStorageKey, JSON.stringify(updatedHistory));
+		}
+
+		function showFormMessage(text, isError = false) {
+			message.textContent = text;
+			message.classList.toggle("error", isError);
+		}
+
+		function resetEditMode() {
+			editingIndex = null;
+			pageTitle.textContent = "Tambah Data Siswa";
+			submitButton.textContent = "Simpan Data Siswa";
+			cancelEditButton.hidden = true;
+			studentForm.reset();
+		}
+
+		function startEditing(index) {
+			const student = getStudents()[index];
+			if (!student) return;
+
+			editingIndex = index;
+			pageTitle.textContent = "Edit Data Siswa";
+			submitButton.textContent = "Simpan Perubahan";
+			cancelEditButton.hidden = false;
+			document.getElementById("name").value = student.name;
+			document.getElementById("nis").value = student.nis;
+			document.getElementById("className").value = student.className;
+			document.getElementById("major").value = student.major;
+			photoInput.value = "";
+			showFormMessage(`Sedang mengedit data ${student.name}.`);
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
+
+		function renderStudents() {
+			const students = getStudents();
+			studentList.replaceChildren();
+			emptyList.hidden = students.length > 0;
+
+			students.forEach((student, index) => {
+				const item = document.createElement("li");
+				const info = document.createElement("div");
+				const name = document.createElement("strong");
+				const detail = document.createElement("small");
+				const actions = document.createElement("div");
+				const editButton = document.createElement("button");
+				const deleteButton = document.createElement("button");
+				info.className = "student-list-info";
+				name.textContent = student.name;
+				detail.textContent = `${student.nis} | ${student.className} | ${student.major}`;
+				editButton.className = "edit-button";
+				editButton.type = "button";
+				editButton.textContent = "Edit";
+				editButton.dataset.index = index;
+				editButton.setAttribute("aria-label", `Edit data ${student.name}`);
+				deleteButton.className = "delete-button";
+				deleteButton.type = "button";
+				deleteButton.textContent = "Hapus";
+				deleteButton.dataset.index = index;
+				deleteButton.setAttribute("aria-label", `Hapus data ${student.name}`);
+				actions.className = "student-list-actions";
+				actions.append(editButton, deleteButton);
+				info.append(name, detail);
+				item.append(info, actions);
+				studentList.appendChild(item);
+			});
+		}
+
+		studentList.addEventListener("click", (event) => {
+			const editButton = event.target.closest(".edit-button");
+			const deleteButton = event.target.closest(".delete-button");
+			if (editButton) {
+				startEditing(Number(editButton.dataset.index));
+				return;
+			}
+			if (!deleteButton) return;
+
+			const index = Number(deleteButton.dataset.index);
+			const students = getStudents();
+			const student = students[index];
+			if (!student || !window.confirm(`Hapus data siswa ${student.name} beserta riwayat presensinya?`)) return;
+
+			students.splice(index, 1);
+			saveStudents(students);
+			localStorage.setItem(
+				attendanceHistoryStorageKey,
+				JSON.stringify(getAttendanceHistory().filter((record) => record.nis !== student.nis))
+			);
+			if (editingIndex === index) {
+				resetEditMode();
+			} else if (editingIndex !== null && editingIndex > index) {
+				editingIndex -= 1;
+			}
+			renderStudents();
+			showFormMessage(`Data siswa ${student.name} berhasil dihapus.`);
+		});
+
+		cancelEditButton.addEventListener("click", () => {
+			resetEditMode();
+			showFormMessage("");
+		});
+
 		studentForm.addEventListener("submit", async (event) => {
 			event.preventDefault();
 			const formData = new FormData(studentForm);
@@ -138,23 +291,33 @@
 			};
 			const students = getStudents();
 
-			if (students.some((savedStudent) => savedStudent.nis === student.nis)) {
-				message.textContent = "NIS / ID tersebut sudah terdaftar.";
-				message.classList.add("error");
+			if (students.some((savedStudent, index) => savedStudent.nis === student.nis && index !== editingIndex)) {
+				showFormMessage("NIS / ID tersebut sudah terdaftar.", true);
 				return;
 			}
 
 			try {
-				student.photo = await readPhoto(photoFile);
-				localStorage.setItem(studentsStorageKey, JSON.stringify([...students, student]));
-				message.textContent = "Data siswa berhasil disimpan. Silakan kembali ke halaman absensi.";
-				message.classList.remove("error");
-				studentForm.reset();
+				const uploadedPhoto = await readPhoto(photoFile);
+				if (uploadedPhoto) student.photo = uploadedPhoto;
+				if (editingIndex === null) {
+					saveStudents([...students, student]);
+					showFormMessage("Data siswa berhasil disimpan. Silakan kembali ke halaman absensi.");
+				} else {
+					const previousStudent = students[editingIndex];
+					const updatedStudents = [...students];
+					updatedStudents[editingIndex] = { ...students[editingIndex], ...student };
+					saveStudents(updatedStudents);
+					updateAttendanceHistory(previousStudent.nis, updatedStudents[editingIndex]);
+					showFormMessage("Perubahan data siswa berhasil disimpan.");
+				}
+				resetEditMode();
+				renderStudents();
 			} catch (error) {
-				message.textContent = "Data gagal disimpan di browser ini.";
-				message.classList.add("error");
+				showFormMessage("Data gagal disimpan di browser ini.", true);
 			}
 		});
+
+		renderStudents();
 	</script>
 </body>
 </html>

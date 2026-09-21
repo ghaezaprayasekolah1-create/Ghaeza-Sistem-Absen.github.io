@@ -295,9 +295,6 @@
 
 		dd { margin: 0; font-size: 15px; font-weight: 700; }
 
-		.status { color: var(--green); }
-		.status.late { color: #b33a3a; }
-
 		.barcode {
 			position: absolute;
 			right: 28px;
@@ -517,7 +514,6 @@
 						<div class="detail"><dt>NIS</dt><dd>-</dd></div>
 						<div class="detail"><dt>Kelas</dt><dd>-</dd></div>
 						<div class="detail"><dt>Jurusan</dt><dd>-</dd></div>
-						<div class="detail"><dt>Status</dt><dd class="status">-</dd></div>
 						<div class="detail"><dt>Tanggal</dt><dd id="attendance-date">14 September 2026</dd></div>
 						<div class="detail"><dt>Waktu</dt><dd id="attendance-time">07:30 WIB</dd></div>
 					</dl>
@@ -536,7 +532,7 @@
 			<div class="history-table-wrap">
 				<table class="history-table">
 					<thead>
-						<tr><th>Foto</th><th>Nama</th><th>NIS</th><th>Kelas</th><th>Tanggal</th><th>Waktu</th><th>Status</th><th>Terlambat</th><th>Hadir</th><th>Aksi</th></tr>
+						<tr><th>Foto</th><th>Nama</th><th>NIS</th><th>Kelas</th><th>Tanggal</th><th>Waktu</th><th>Aksi</th></tr>
 					</thead>
 					<tbody id="attendance-history-list"></tbody>
 				</table>
@@ -597,7 +593,6 @@
 			nis: document.querySelector(".detail:nth-child(1) dd"),
 			className: document.querySelector(".detail:nth-child(2) dd"),
 			major: document.querySelector(".detail:nth-child(3) dd"),
-			status: document.querySelector(".detail:nth-child(4) dd"),
 			date: document.getElementById("attendance-date"),
 			time: document.getElementById("attendance-time")
 		};
@@ -667,10 +662,6 @@
 		function renderAttendanceHistory() {
 			const history = getAttendanceHistory();
 			const summarizedHistory = new Map();
-			const lateCounts = history.reduce((counts, record) => {
-				if (record.status === "Terlambat") counts[record.nis] = (counts[record.nis] || 0) + 1;
-				return counts;
-			}, {});
 			history.forEach((record) => {
 				const existingRecord = summarizedHistory.get(record.nis);
 				summarizedHistory.set(record.nis, {
@@ -699,7 +690,7 @@
 				deleteHistoryButton.setAttribute("aria-label", `Hapus presensi terbaru ${record.name}`);
 				actionCell.appendChild(deleteHistoryButton);
 				row.appendChild(photoCell);
-				const displayValues = [record.name, record.nis, record.className, record.date, record.time, record.status || "Hadir", `${lateCounts[record.nis] || 0} kali`, `${record.attendanceCount} kali`];
+				const displayValues = [record.name, record.nis, record.className, record.date, record.time];
 				displayValues.forEach((value) => {
 					const cell = document.createElement("td");
 					cell.textContent = value;
@@ -780,8 +771,6 @@
 		function recordAttendance(student) {
 			const now = new Date();
 			clearTimeout(attendanceResetTimer);
-			const delayMinutes = Math.max(0, (now.getHours() * 60 + now.getMinutes()) - 405);
-			const attendanceStatus = delayMinutes > 0 ? "Terlambat" : "Hadir";
 			const date = now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 			const time = `${now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })} WIB`;
 			const attendanceRecord = {
@@ -791,8 +780,6 @@
 				photo: student.photo || "FOTO SISWA/esokkoloh.jpg",
 				date,
 				time,
-				status: attendanceStatus,
-				delayMinutes
 			};
 			saveAttendanceHistory([...getAttendanceHistory(), attendanceRecord]);
 			attendanceCard.classList.add("is-complete");
@@ -805,8 +792,6 @@
 			attendanceElements.nis.textContent = student.nis;
 			attendanceElements.className.textContent = student.className;
 			attendanceElements.major.textContent = student.major;
-			attendanceElements.status.textContent = attendanceStatus;
-			attendanceElements.status.classList.toggle("late", attendanceStatus === "Terlambat");
 			attendanceElements.date.textContent = date;
 			attendanceElements.time.textContent = time;
 			renderAttendanceHistory();
@@ -824,8 +809,6 @@
 			attendanceElements.nis.textContent = "-";
 			attendanceElements.className.textContent = "-";
 			attendanceElements.major.textContent = "-";
-			attendanceElements.status.textContent = "-";
-			attendanceElements.status.classList.remove("late");
 			attendanceElements.date.textContent = "-";
 			attendanceElements.time.textContent = "-";
 			attendanceIdInput.value = "";
@@ -848,12 +831,20 @@
 		});
 
 		tapButton.addEventListener("click", () => {
-			const firstStudent = getStudents()[0];
-			if (!firstStudent) {
-				showMessage(idMessage, "Belum ada data siswa. Tambahkan siswa atau masukkan ID yang terdaftar.", true);
-				return;
-			}
-			recordAttendance(firstStudent);
+			clearTimeout(attendanceResetTimer);
+			attendanceCard.classList.add("is-complete");
+			attendanceElements.eyebrow.textContent = "Fitur dalam pengembangan";
+			attendanceElements.title.textContent = "Coming Soon";
+			attendanceElements.message.innerHTML = '<span class="success-icon">&#9675;</span> Simulasi tap kartu segera hadir';
+			attendanceElements.photo.src = "FOTO SISWA/esokkoloh.jpg";
+			attendanceElements.photo.alt = "Simulasi tap kartu segera hadir";
+			attendanceElements.name.textContent = "Simulasi Tap Kartu";
+			attendanceElements.nis.textContent = "-";
+			attendanceElements.className.textContent = "-";
+			attendanceElements.major.textContent = "-";
+			attendanceElements.date.textContent = "-";
+			attendanceElements.time.textContent = "-";
+			attendanceResetTimer = setTimeout(resetAttendanceView, 10000);
 		});
 
 		renderAttendanceHistory();
