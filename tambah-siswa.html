@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tambah Data Siswa | SMK NUSANTARA 1 KOTA TANGERANG</title>
+  <style>
+    :root {
+      --navy: #14243b;
+      --blue: #2f6fed;
+      --sky: #eaf2ff;
+      --green: #18875b;
+      --ink: #172235;
+      --muted: #708096;
+      --line: #dce5f0;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #f3f7fc 0%, #e9f0f9 48%, #dbe8f7 100%);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      max-width: 1080px;
+      margin: auto;
+      padding: 28px 28px 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--navy);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+
+    .brand-mark {
+      display: block;
+      width: 38px;
+      height: 38px;
+      margin: 0 auto;
+      padding: 0;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      object-fit: contain;
+    }
+
+    .topbar-label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    main {
+      display: grid;
+      place-items: center;
+      min-height: calc(100vh - 84px);
+      padding: 28px 20px 64px;
+    }
+
+    .student-management {
+      width: min(100%, 760px);
+      padding: 28px;
+      background: var(--white);
+      border: 1px solid rgba(255, 255, 255, .8);
+      border-radius: 18px;
+      box-shadow: 0 14px 35px rgba(35, 62, 101, .1);
+    }
+
+    .student-management h2 {
+      margin: 0 0 6px;
+      color: var(--navy);
+      font-size: 23px;
+    }
+
+    .management-description {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .student-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .form-field { display: grid; gap: 6px; }
+    .form-field.full-width { grid-column: 1 / -1; }
+
+    .form-field label {
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .form-field input,
+    .form-field select {
+      width: 100%;
+      padding: 11px 12px;
+      color: var(--ink);
+      background: #fbfdff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: inherit;
+    }
+
+    .form-field input:focus,
+    .form-field select:focus {
+      outline: 3px solid #d5e3ff;
+      border-color: var(--blue);
+    }
+
+    .form-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      grid-column: 1 / -1;
+      flex-wrap: wrap;
+    }
+
+    .form-message {
+      margin: 0;
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .form-message.error { color: #b33a3a; }
+
+    .student-list {
+      display: grid;
+      gap: 9px;
+      margin: 22px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .student-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 14px;
+      background: var(--sky);
+      border-radius: 8px;
+      font-size: 13px;
+    }
+
+    .student-list-info { display: grid; flex: 1; gap: 3px; }
+    .student-list-photo { width: 42px; height: 42px; object-fit: cover; border-radius: 7px; }
+    .student-list small { color: var(--muted); }
+
+    .tap-button {
+      padding: 13px 22px;
+      color: var(--white);
+      background: var(--blue);
+      border: 0;
+      border-radius: 10px;
+      box-shadow: 0 8px 16px rgba(47, 111, 237, .22);
+      cursor: pointer;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      transition: transform .2s ease, background .2s ease;
+      text-decoration: none;
+    }
+
+    .tap-button:hover { background: #245bc9; transform: translateY(-2px); }
+    .tap-button:focus-visible { outline: 3px solid #9dbaf2; outline-offset: 3px; }
+
+    .secondary-link {
+      display: inline-block;
+      margin-top: 18px;
+      color: var(--navy);
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .delete-student-button {
+      padding: 7px 10px;
+      color: #b33a3a;
+      background: var(--white);
+      border: 1px solid #edcaca;
+      border-radius: 6px;
+      cursor: pointer;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .delete-student-button:hover { background: #fff3f3; }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 20px 18px 12px; }
+      .topbar-label { display: none; }
+      main { min-height: calc(100vh - 70px); padding: 16px 12px 36px; }
+      .student-management { padding: 20px 18px; }
+      .student-form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><img class="brand-mark" src="nusteng.png" alt="Logo NUSTENG" style="object-fit: contain; width: 38px; height: 38px; background: transparent; border-radius: 0; box-shadow: none;"> SMK NUSANTARA 1 KOTA TANGERANG</div>
+    <div class="topbar-label">Kelola Data Siswa</div>
+  </header>
+
+  <main>
+    <section class="student-management" aria-labelledby="student-management-title">
+      <h2 id="student-management-title">Tambah Data Siswa</h2>
+      <p class="management-description">Data siswa tersimpan di browser ini dan tetap tersedia saat halaman dibuka kembali.</p>
+
+      <form class="student-form" id="student-form">
+        <div class="form-field">
+          <label for="student-name">Nama siswa</label>
+          <input id="student-name" name="name" type="text" required>
+        </div>
+        <div class="form-field">
+          <label for="student-nis">NIS</label>
+          <input id="student-nis" name="nis" type="text" inputmode="numeric" required>
+        </div>
+        <div class="form-field">
+          <label for="student-class">Kelas</label>
+          <input id="student-class" name="className" type="text" placeholder="Contoh: XI RPL" required>
+        </div>
+        <div class="form-field">
+          <label for="student-major">Jurusan</label>
+          <input id="student-major" name="major" type="text" required>
+        </div>
+        <div class="form-field full-width">
+          <label for="student-photo-upload">Upload foto siswa</label>
+          <input id="student-photo-upload" name="photoFile" type="file" accept="image/jpeg,image/png,image/webp" required>
+        </div>
+        <div class="form-actions">
+          <button class="tap-button" type="submit">Tambah Siswa</button>
+          <p class="form-message" id="form-message" role="status"></p>
+        </div>
+      </form>
+
+      <ul class="student-list" id="student-list" aria-live="polite"></ul>
+
+      <a class="secondary-link" href="index.html">← Kembali ke halaman absensi</a>
+    </section>
+  </main>
+
+  <script>
+    const studentsStorageKey = "dataSiswa";
+    const studentPhotoFiles = [
+      "FOTO SISWA/AGNEL.jpg",
+      "FOTO SISWA/esokkoloh.jpg",
+      "FOTO SISWA/NOPAL.jpg",
+      "FOTO SISWA/PINO.jpg",
+      "FOTO SISWA/RAKA.jpg"
+    ];
+    const namedStudentPhotos = {
+      agnel: "FOTO SISWA/AGNEL.jpg",
+      naufal: "FOTO SISWA/NOPAL.jpg",
+      nopal: "FOTO SISWA/NOPAL.jpg",
+      ghaeza: "FOTO SISWA/esokkoloh.jpg",
+      pino: "FOTO SISWA/PINO.jpg",
+      raka: "FOTO SISWA/RAKA.jpg"
+    };
+
+    const studentForm = document.getElementById("student-form");
+    const studentPhotoUpload = document.getElementById("student-photo-upload");
+    const studentList = document.getElementById("student-list");
+    const formMessage = document.getElementById("form-message");
+
+    function getStudents() {
+      try {
+        const savedStudents = JSON.parse(localStorage.getItem(studentsStorageKey));
+        if (!Array.isArray(savedStudents)) return [];
+
+        const normalizedNames = savedStudents.map((student) => student.name.toLowerCase().replace(/\s+/g, ""));
+        const migratedStudents = savedStudents.map((student, index) => {
+          const studentName = normalizedNames[index];
+          if (student.photo && student.photo.startsWith("data:image/")) return student;
+          const namedPhoto = Object.entries(namedStudentPhotos).find(([name]) => studentName.includes(name));
+          if (namedPhoto) return { ...student, photo: namedPhoto[1] };
+          if (student.photo) return student;
+
+          const matchingPhoto = studentPhotoFiles.find((photo) => {
+            const fileName = photo.split("/").pop().split(".")[0].toLowerCase();
+            return studentName.includes(fileName) || fileName.includes(studentName);
+          });
+          return { ...student, photo: matchingPhoto || studentPhotoFiles[index % studentPhotoFiles.length] };
+        });
+
+        if (migratedStudents.some((student, index) => student.photo !== savedStudents[index].photo)) {
+          localStorage.setItem(studentsStorageKey, JSON.stringify(migratedStudents));
+        }
+        return migratedStudents;
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveStudents(students) {
+      try {
+        localStorage.setItem(studentsStorageKey, JSON.stringify(students));
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function showMessage(element, message, isError = false) {
+      element.textContent = message;
+      element.classList.toggle("error", isError);
+    }
+
+    function renderStudents() {
+      studentList.replaceChildren();
+      getStudents().forEach((student) => {
+        const item = document.createElement("li");
+        const photo = document.createElement("img");
+        const info = document.createElement("div");
+        const name = document.createElement("strong");
+        const detail = document.createElement("small");
+        const deleteButton = document.createElement("button");
+
+        photo.className = "student-list-photo";
+        photo.src = student.photo || "FOTO SISWA/esokkoloh.jpg";
+        photo.alt = `Foto siswa ${student.name}`;
+
+        info.className = "student-list-info";
+        name.textContent = student.name;
+        detail.textContent = `${student.nis} | ${student.className} | ${student.major}`;
+
+        deleteButton.type = "button";
+        deleteButton.className = "delete-student-button";
+        deleteButton.dataset.nis = student.nis;
+        deleteButton.textContent = "Hapus";
+        deleteButton.setAttribute("aria-label", `Hapus data ${student.name}`);
+
+        info.append(name, detail);
+        item.append(photo, info, deleteButton);
+        studentList.appendChild(item);
+      });
+    }
+
+    studentList.addEventListener("click", (event) => {
+      const deleteButton = event.target.closest(".delete-student-button");
+      if (!deleteButton) return;
+
+      const nisToDelete = deleteButton.dataset.nis;
+      const remainingStudents = getStudents().filter((student) => student.nis !== nisToDelete);
+
+      if (saveStudents(remainingStudents)) {
+        renderStudents();
+        showMessage(formMessage, "Data siswa berhasil dihapus.");
+      }
+    });
+
+    studentForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const formData = new FormData(studentForm);
+      const student = Object.fromEntries(formData.entries());
+      const photoFile = studentPhotoUpload.files[0];
+      delete student.photoFile;
+      Object.keys(student).forEach((key) => { student[key] = student[key].trim(); });
+      const students = getStudents();
+
+      if (Object.values(student).some((value) => !value) || !photoFile) {
+        showMessage(formMessage, "Semua data siswa wajib diisi.", true);
+        return;
+      }
+      if (!photoFile.type.startsWith("image/")) {
+        showMessage(formMessage, "File harus berupa foto.", true);
+        return;
+      }
+      if (photoFile.size > 2 * 1024 * 1024) {
+        showMessage(formMessage, "Ukuran foto maksimal 2 MB.", true);
+        return;
+      }
+      if (!/^\d+$/.test(student.nis)) {
+        showMessage(formMessage, "NIS hanya boleh berisi angka.", true);
+        return;
+      }
+      if (students.some((savedStudent) => savedStudent.nis === student.nis)) {
+        showMessage(formMessage, "NIS sudah terdaftar.", true);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        student.photo = reader.result;
+        if (!saveStudents([...students, student])) {
+          showMessage(formMessage, "Data tidak dapat disimpan di browser.", true);
+          return;
+        }
+
+        studentForm.reset();
+        showMessage(formMessage, "Data siswa berhasil ditambahkan.");
+        renderStudents();
+      });
+
+      reader.addEventListener("error", () => showMessage(formMessage, "Foto tidak dapat dibaca.", true));
+      reader.readAsDataURL(photoFile);
+    });
+
+    renderStudents();
+  </script>
+</body>
+</html>
