@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Tambah Data Siswa | SMK NUSANTARA 1 KOTA TANGERANG</title>
+	<style>
+		:root {
+			--navy: #14243b;
+			--blue: #2f6fed;
+			--ink: #172235;
+			--muted: #708096;
+			--line: #dce5f0;
+			--white: #ffffff;
+			--sky: #eaf2ff;
+			--green: #18875b;
+		}
+
+		* { box-sizing: border-box; }
+
+		body {
+			min-height: 100vh;
+			margin: 0;
+			padding: 28px 20px 60px;
+			color: var(--ink);
+			font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+			background: linear-gradient(135deg, #f3f7fc 0%, #e9f0f9 48%, #dbe8f7 100%);
+		}
+
+		.page { width: min(100%, 760px); margin: auto; }
+		.brand { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; color: var(--navy); font-weight: 800; letter-spacing: .04em; }
+		.brand img { width: 38px; height: 38px; object-fit: contain; }
+		.panel { padding: 34px; background: var(--white); border-radius: 18px; box-shadow: 0 20px 50px rgba(35, 62, 101, .14); }
+		h1 { margin: 0 0 8px; color: var(--navy); font-family: Georgia, serif; font-size: 38px; font-weight: 500; }
+		.intro { margin: 0 0 24px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+		form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+		.field { display: grid; gap: 6px; }
+		.field.full { grid-column: 1 / -1; }
+		label { color: var(--navy); font-size: 12px; font-weight: 800; }
+		input { width: 100%; padding: 12px; color: var(--ink); background: #fbfdff; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+		input:focus { outline: 3px solid #d5e3ff; border-color: var(--blue); }
+		.actions { display: flex; align-items: center; gap: 12px; grid-column: 1 / -1; margin-top: 4px; }
+		button, .back-link { display: inline-block; padding: 12px 18px; border: 0; border-radius: 8px; cursor: pointer; font: inherit; font-weight: 800; text-decoration: none; }
+		button { color: var(--white); background: var(--blue); }
+		button:hover { background: #245bc9; }
+		.back-link { color: var(--navy); background: #edf2f8; }
+		.message { min-height: 18px; margin: 0; color: var(--green); font-size: 12px; font-weight: 700; }
+		.message.error { color: #b33a3a; }
+
+		@media (max-width: 600px) {
+			body { padding: 20px 12px 36px; }
+			.panel { padding: 25px 20px; }
+			h1 { font-size: 32px; }
+			form { grid-template-columns: 1fr; }
+			.field.full, .actions { grid-column: auto; }
+			.actions { flex-wrap: wrap; }
+		}
+	</style>
+</head>
+<body>
+	<main class="page">
+		<div class="brand">
+			<img src="logo nusteng.png" alt="Logo NUSTENG">
+			<span>SMK NUSANTARA 1 KOTA TANGERANG</span>
+		</div>
+
+		<section class="panel" aria-labelledby="page-title">
+			<h1 id="page-title">Tambah Data Siswa</h1>
+			<p class="intro">Data akan disimpan di browser ini dan langsung tersedia pada halaman absensi.</p>
+			<form id="student-form">
+				<div class="field">
+					<label for="name">Nama siswa</label>
+					<input id="name" name="name" required>
+				</div>
+				<div class="field">
+					<label for="nis">NIS / ID siswa</label>
+					<input id="nis" name="nis" inputmode="numeric" required>
+				</div>
+				<div class="field">
+					<label for="className">Kelas</label>
+					<input id="className" name="className" required>
+				</div>
+				<div class="field">
+					<label for="major">Jurusan</label>
+					<input id="major" name="major" required>
+				</div>
+				<div class="field full">
+					<label for="photo">Upload foto siswa (opsional)</label>
+					<input id="photo" name="photo" type="file" accept="image/*">
+				</div>
+				<div class="actions">
+					<button type="submit">Simpan Data Siswa</button>
+					<a class="back-link" href="index.html">Kembali ke Absensi</a>
+					<p class="message" id="message" role="status"></p>
+				</div>
+			</form>
+		</section>
+	</main>
+
+	<script>
+		const studentsStorageKey = "dataSiswa";
+		const studentForm = document.getElementById("student-form");
+		const photoInput = document.getElementById("photo");
+		const message = document.getElementById("message");
+
+		function getStudents() {
+			try {
+				const students = JSON.parse(localStorage.getItem(studentsStorageKey));
+				return Array.isArray(students) ? students : [];
+			} catch (error) {
+				return [];
+			}
+		}
+
+		function readPhoto(file) {
+			return new Promise((resolve, reject) => {
+				if (!file) {
+					resolve("");
+					return;
+				}
+
+				const reader = new FileReader();
+				reader.addEventListener("load", () => resolve(reader.result));
+				reader.addEventListener("error", reject);
+				reader.readAsDataURL(file);
+			});
+		}
+
+		studentForm.addEventListener("submit", async (event) => {
+			event.preventDefault();
+			const formData = new FormData(studentForm);
+			const photoFile = photoInput.files[0];
+			const student = {
+				name: formData.get("name").trim(),
+				nis: formData.get("nis").trim(),
+				className: formData.get("className").trim(),
+				major: formData.get("major").trim()
+			};
+			const students = getStudents();
+
+			if (students.some((savedStudent) => savedStudent.nis === student.nis)) {
+				message.textContent = "NIS / ID tersebut sudah terdaftar.";
+				message.classList.add("error");
+				return;
+			}
+
+			try {
+				student.photo = await readPhoto(photoFile);
+				localStorage.setItem(studentsStorageKey, JSON.stringify([...students, student]));
+				message.textContent = "Data siswa berhasil disimpan. Silakan kembali ke halaman absensi.";
+				message.classList.remove("error");
+				studentForm.reset();
+			} catch (error) {
+				message.textContent = "Data gagal disimpan di browser ini.";
+				message.classList.add("error");
+			}
+		});
+	</script>
+</body>
+</html>
