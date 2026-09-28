@@ -498,7 +498,7 @@
 					<span class="tap-hint">Mode demo untuk pengujian tampilan</span>
 					<form class="id-form" id="id-form">
 						<label class="sr-only" for="attendance-id">ID siswa</label>
-						<input id="attendance-id" type="text" inputmode="numeric" placeholder="Masukkan ID / NIS siswa" required>
+						<input id="attendance-id" type="text" autocomplete="off" placeholder="Masukkan nomor kartu / NIS" required>
 						<button class="tap-button" type="submit">Absen</button>
 					</form>
 					<p class="id-message" id="id-message" role="alert"></p>
@@ -514,6 +514,7 @@
 						<div class="detail"><dt>NIS</dt><dd>-</dd></div>
 						<div class="detail"><dt>Kelas</dt><dd>-</dd></div>
 						<div class="detail"><dt>Jurusan</dt><dd>-</dd></div>
+						<div class="detail"><dt>Nomor Kartu</dt><dd id="attendance-card-number">-</dd></div>
 						<div class="detail"><dt>Tanggal</dt><dd id="attendance-date">14 September 2026</dd></div>
 						<div class="detail"><dt>Waktu</dt><dd id="attendance-time">07:30 WIB</dd></div>
 					</dl>
@@ -522,17 +523,13 @@
  
 		</section>
 
-		<div style="width: min(100%, 760px); margin-top: 22px; text-align: right;">
-			<a class="tap-button" href="tambah-siswa.html" style="display: inline-block; text-decoration: none;">Tambah Data Siswa</a>
-		</div>
-
 		<section class="attendance-history" aria-labelledby="attendance-history-title">
 			<h2 id="attendance-history-title">Riwayat Presensi</h2>
 			<p class="management-description">Daftar kehadiran siswa yang sudah tercatat di browser ini.</p>
 			<div class="history-table-wrap">
 				<table class="history-table">
 					<thead>
-						<tr><th>Foto</th><th>Nama</th><th>NIS</th><th>Kelas</th><th>Tanggal</th><th>Waktu</th><th>Aksi</th></tr>
+						<tr><th>Foto</th><th>Nama</th><th>NIS</th><th>Nomor Kartu</th><th>Kelas</th><th>Tanggal</th><th>Waktu</th><th>Aksi</th></tr>
 					</thead>
 					<tbody id="attendance-history-list"></tbody>
 				</table>
@@ -593,6 +590,7 @@
 			nis: document.querySelector(".detail:nth-child(1) dd"),
 			className: document.querySelector(".detail:nth-child(2) dd"),
 			major: document.querySelector(".detail:nth-child(3) dd"),
+			cardNumber: document.getElementById("attendance-card-number"),
 			date: document.getElementById("attendance-date"),
 			time: document.getElementById("attendance-time")
 		};
@@ -690,7 +688,7 @@
 				deleteHistoryButton.setAttribute("aria-label", `Hapus presensi terbaru ${record.name}`);
 				actionCell.appendChild(deleteHistoryButton);
 				row.appendChild(photoCell);
-				const displayValues = [record.name, record.nis, record.className, record.date, record.time];
+				const displayValues = [record.name, record.nis, record.cardNumber || "-", record.className, record.date, record.time];
 				displayValues.forEach((value) => {
 					const cell = document.createElement("td");
 					cell.textContent = value;
@@ -750,6 +748,7 @@
 			const attendanceRecord = {
 				name: student.name,
 				nis: student.nis,
+				cardNumber: student.cardNumber || "",
 				className: student.className,
 				photo: student.photo || "FOTO SISWA/esokkoloh.jpg",
 				date,
@@ -766,6 +765,7 @@
 			attendanceElements.nis.textContent = student.nis;
 			attendanceElements.className.textContent = student.className;
 			attendanceElements.major.textContent = student.major;
+			attendanceElements.cardNumber.textContent = student.cardNumber || "-";
 			attendanceElements.date.textContent = date;
 			attendanceElements.time.textContent = time;
 			renderAttendanceHistory();
@@ -783,6 +783,7 @@
 			attendanceElements.nis.textContent = "-";
 			attendanceElements.className.textContent = "-";
 			attendanceElements.major.textContent = "-";
+			attendanceElements.cardNumber.textContent = "-";
 			attendanceElements.date.textContent = "-";
 			attendanceElements.time.textContent = "-";
 			attendanceIdInput.value = "";
@@ -793,7 +794,7 @@
 		idForm.addEventListener("submit", (event) => {
 			event.preventDefault();
 			const enteredId = attendanceIdInput.value.trim();
-			const student = getStudents().find((savedStudent) => savedStudent.nis === enteredId);
+			const student = getStudents().find((savedStudent) => savedStudent.nis === enteredId || savedStudent.cardNumber === enteredId);
 
 			if (!student) {
 				showMessage(idMessage, "ID / NIS belum terdaftar. Tambahkan data siswa terlebih dahulu.", true);
@@ -816,6 +817,7 @@
 			attendanceElements.nis.textContent = "-";
 			attendanceElements.className.textContent = "-";
 			attendanceElements.major.textContent = "-";
+			attendanceElements.cardNumber.textContent = "-";
 			attendanceElements.date.textContent = "-";
 			attendanceElements.time.textContent = "-";
 			attendanceResetTimer = setTimeout(resetAttendanceView, 10000);
