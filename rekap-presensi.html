@@ -47,6 +47,18 @@
 		th { color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
 		.photo { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; vertical-align: middle; }
 		.status { color: var(--green); font-weight: 800; }
+		.delete-button { padding: 7px 10px; color: #b33a3a; background: var(--white); border: 1px solid #edcaca; font-size: 11px; }
+		.delete-button:hover { background: #fff3f3; }
+		.confirm-modal[hidden] { display: none; }
+		.confirm-modal { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 20px; background: rgba(20, 36, 59, .48); }
+		.confirm-dialog { width: min(100%, 380px); padding: 26px; background: var(--white); border-radius: 16px; box-shadow: 0 20px 50px rgba(20, 36, 59, .24); animation: rise .2s ease both; }
+		.confirm-dialog h2 { margin: 0 0 8px; font-size: 22px; }
+		.confirm-dialog p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+		.confirm-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; }
+		.confirm-button { padding: 10px 16px; border: 0; border-radius: 8px; cursor: pointer; font: inherit; font-weight: 800; }
+		.cancel-button { color: var(--navy); background: #edf2f8; }
+		.confirm-delete-button { color: var(--white); background: #b33a3a; }
+		.confirm-delete-button:hover { background: #972f2f; }
 		.empty { margin: 20px 0 0; color: var(--muted); font-size: 13px; }
 		main[hidden] { display: none; }
 		@media (max-width: 600px) { body { padding: 18px 12px 36px; } .topbar { align-items: flex-start; flex-direction: column; } .panel { padding: 21px 17px; } h1 { font-size: 31px; } .summary { gap: 12px; } }
@@ -82,7 +94,7 @@
 			<div class="table-wrap">
 				<table>
 					<thead>
-						<tr><th>Foto</th><th>Nama</th><th>NIS</th><th>Nomor Kartu</th><th>Kelas</th><th>Status</th><th>Tanggal</th><th>Waktu</th></tr>
+						<tr><th>Foto</th><th>Nama</th><th>NIS</th><th>Nomor Kartu</th><th>Kelas</th><th>Jurusan</th><th>Status</th><th>Tanggal</th><th>Waktu</th><th>Aksi</th></tr>
 					</thead>
 					<tbody id="attendance-list"></tbody>
 				</table>
@@ -90,6 +102,16 @@
 			</div>
 		</section>
 	</main>
+	<div class="confirm-modal" id="confirm-modal" role="presentation" hidden>
+		<section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description">
+			<h2 id="confirm-title">Yakin ingin hapus?</h2>
+			<p id="confirm-description"></p>
+			<div class="confirm-actions">
+				<button class="confirm-button cancel-button" id="cancel-delete" type="button">Batal</button>
+				<button class="confirm-button confirm-delete-button" id="confirm-delete" type="button">Hapus</button>
+			</div>
+		</section>
+	</div>
 	<script>
 		const sessionKey = "adminRecapLoggedIn";
 		const historyKey = "riwayatPresensi";
@@ -104,7 +126,12 @@
 		const emptyMessage = document.getElementById("empty-message");
 		const searchInput = document.getElementById("search-input");
 		const resultsCount = document.getElementById("results-count");
+		const confirmModal = document.getElementById("confirm-modal");
+		const confirmDescription = document.getElementById("confirm-description");
+		const cancelDeleteButton = document.getElementById("cancel-delete");
+		const confirmDeleteButton = document.getElementById("confirm-delete");
 		let attendanceRecords = [];
+		let recordIndexToDelete = null;
 
 		function readAttendanceRecords() {
 			try {
@@ -115,11 +142,21 @@
 			}
 		}
 
+		function readStudentMajors() {
+			try {
+				const students = JSON.parse(localStorage.getItem("dataSiswa"));
+				return new Map((Array.isArray(students) ? students : []).map((student) => [student.nis, student.major]));
+			} catch (error) {
+				return new Map();
+			}
+		}
+
 		function renderAttendance() {
 			const query = searchInput.value.trim().toLocaleLowerCase("id-ID");
+			const studentMajors = readStudentMajors();
 			const filteredRecords = attendanceRecords
 				.map((record, index) => ({ ...record, index }))
-				.filter((record) => [record.name, record.nis, record.cardNumber, record.className]
+				.filter((record) => [record.name, record.nis, record.cardNumber, record.className, record.major || studentMajors.get(record.nis)]
 					.some((value) => String(value || "").toLocaleLowerCase("id-ID").includes(query)))
 				.reverse();
 			const studentIds = new Set(attendanceRecords.map((record) => record.nis));
@@ -138,25 +175,78 @@
 				photo.alt = `Foto siswa ${record.name || ""}`;
 				photoCell.appendChild(photo);
 				row.appendChild(photoCell);
-				const values = [record.name, record.nis, record.cardNumber || "-", record.className, record.status || "Hadir", record.date, record.time];
+				const values = [record.name, record.nis, record.cardNumber || "-", record.className, record.major || studentMajors.get(record.nis) || "-", record.status || "Hadir", record.date, record.time];
 				values.forEach((value, index) => {
 					const cell = document.createElement("td");
 					cell.textContent = value || "-";
 					if (index === 4) cell.className = "status";
 					row.appendChild(cell);
 				});
+				const actionCell = document.createElement("td");
+				const deleteButton = document.createElement("button");
+				deleteButton.type = "button";
+				deleteButton.className = "delete-button";
+				deleteButton.dataset.recordIndex = record.index;
+				deleteButton.textContent = "Hapus";
+				deleteButton.setAttribute("aria-label", `Hapus presensi ${record.name || "siswa"} pada ${record.date || "tanggal tidak diketahui"}`);
+				actionCell.appendChild(deleteButton);
+				row.appendChild(actionCell);
 				attendanceList.appendChild(row);
 			});
 		}
 
+		function closeDeleteModal() {
+			confirmModal.hidden = true;
+			recordIndexToDelete = null;
+		}
+
 		searchInput.addEventListener("input", renderAttendance);
+		attendanceList.addEventListener("click", (event) => {
+			const deleteButton = event.target.closest(".delete-button");
+			if (!deleteButton) return;
+
+			const recordIndex = Number(deleteButton.dataset.recordIndex);
+			const record = attendanceRecords[recordIndex];
+			if (!record) return;
+
+			recordIndexToDelete = recordIndex;
+			confirmDescription.textContent = `Presensi ${record.name} pada ${record.date} akan dihapus.`;
+			confirmModal.hidden = false;
+			confirmDeleteButton.focus();
+		});
+
+		cancelDeleteButton.addEventListener("click", closeDeleteModal);
+		confirmModal.addEventListener("click", (event) => {
+			if (event.target === confirmModal) closeDeleteModal();
+		});
+		document.addEventListener("keydown", (event) => {
+			if (event.key === "Escape" && !confirmModal.hidden) closeDeleteModal();
+		});
+		confirmDeleteButton.addEventListener("click", () => {
+			if (recordIndexToDelete === null) return;
+			const updatedRecords = readAttendanceRecords();
+			if (recordIndexToDelete < 0 || recordIndexToDelete >= updatedRecords.length) {
+				closeDeleteModal();
+				return;
+			}
+			updatedRecords.splice(recordIndexToDelete, 1);
+			try {
+				localStorage.setItem(historyKey, JSON.stringify(updatedRecords));
+				attendanceRecords = updatedRecords;
+				renderAttendance();
+			} catch (error) {
+				window.alert("Riwayat presensi gagal dihapus.");
+			}
+			closeDeleteModal();
+		});
 		document.getElementById("export-button").addEventListener("click", () => {
 			const query = searchInput.value.trim().toLocaleLowerCase("id-ID");
-			const recordsToExport = attendanceRecords.filter((record) => [record.name, record.nis, record.cardNumber, record.className]
+			const studentMajors = readStudentMajors();
+			const recordsToExport = attendanceRecords.filter((record) => [record.name, record.nis, record.cardNumber, record.className, record.major || studentMajors.get(record.nis)]
 				.some((value) => String(value || "").toLocaleLowerCase("id-ID").includes(query)));
-			const headers = ["Nama", "NIS", "Nomor Kartu", "Kelas", "Status", "Tanggal", "Waktu"];
+			const headers = ["Nama", "NIS", "Nomor Kartu", "Kelas", "Jurusan", "Status", "Tanggal", "Waktu"];
 			const csvValue = (value) => `"${String(value || "").replace(/"/g, '""')}"`;
-			const csv = [headers, ...recordsToExport.map((record) => [record.name, record.nis, record.cardNumber, record.className, record.status || "Hadir", record.date, record.time])]
+			const csv = [headers, ...recordsToExport.map((record) => [record.name, record.nis, record.cardNumber, record.className, record.major || studentMajors.get(record.nis), record.status || "Hadir", record.date, record.time])]
 				.map((row) => row.map(csvValue).join(","))
 				.join("\r\n");
 			const downloadUrl = URL.createObjectURL(new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" }));
