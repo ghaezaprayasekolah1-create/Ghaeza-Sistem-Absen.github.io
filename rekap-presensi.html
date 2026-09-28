@@ -45,6 +45,8 @@
 		table { width: 100%; border-collapse: collapse; font-size: 13px; }
 		th, td { padding: 11px 9px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
 		th { color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+		th:last-child, td:last-child { position: sticky; right: 0; background: var(--white); box-shadow: -6px 0 8px rgba(20, 36, 59, .06); }
+		th:last-child { z-index: 1; }
 		.photo { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; vertical-align: middle; }
 		.status { color: var(--green); font-weight: 800; }
 		.delete-button { padding: 7px 10px; color: #b33a3a; background: var(--white); border: 1px solid #edcaca; font-size: 11px; }
