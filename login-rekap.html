@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="noindex, nofollow">
+	<title>Login Rekap Presensi | SMK NUSANTARA 1 KOTA TANGERANG</title>
+	<style>
+		:root {
+			--navy: #14243b;
+			--blue: #2f6fed;
+			--ink: #172235;
+			--muted: #708096;
+			--line: #dce5f0;
+			--white: #ffffff;
+			--red: #b33a3a;
+		}
+
+		* { box-sizing: border-box; }
+		body { display: grid; min-height: 100vh; place-items: center; margin: 0; padding: 24px; color: var(--ink); font-family: "Trebuchet MS", "Segoe UI", sans-serif; background: linear-gradient(135deg, #f3f7fc 0%, #e9f0f9 48%, #dbe8f7 100%); }
+		.login-panel { width: min(100%, 440px); padding: 36px; background: var(--white); border: 1px solid rgba(255, 255, 255, .8); border-radius: 18px; box-shadow: 0 24px 60px rgba(35, 62, 101, .14); animation: rise .45s ease both; }
+		.brand { display: flex; align-items: center; gap: 12px; margin-bottom: 34px; color: var(--navy); font-size: 12px; font-weight: 800; letter-spacing: .04em; }
+		.brand img { width: 38px; height: 38px; object-fit: contain; }
+		.eyebrow { margin: 0 0 9px; color: var(--blue); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+		h1 { margin: 0 0 9px; color: var(--navy); font-family: Georgia, serif; font-size: 38px; font-weight: 500; }
+		.intro { margin: 0 0 25px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+		form { display: grid; gap: 16px; }
+		.field { display: grid; gap: 7px; }
+		label { color: var(--navy); font-size: 12px; font-weight: 800; }
+		input { width: 100%; padding: 12px; color: var(--ink); background: #fbfdff; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+		input:focus { outline: 3px solid #d5e3ff; border-color: var(--blue); }
+		button, .back-link { display: inline-block; padding: 12px 18px; border: 0; border-radius: 8px; cursor: pointer; font: inherit; font-weight: 800; text-align: center; text-decoration: none; }
+		button { margin-top: 4px; color: var(--white); background: var(--blue); }
+		button:hover { background: #245bc9; }
+		.message { min-height: 18px; margin: 0; color: var(--red); font-size: 12px; font-weight: 700; }
+		.back-link { display: block; margin-top: 14px; color: var(--navy); background: #edf2f8; }
+		@keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+		@media (max-width: 480px) { .login-panel { padding: 28px 22px; } h1 { font-size: 34px; } .brand { align-items: flex-start; } }
+	</style>
+</head>
+<body>
+	<main class="login-panel">
+		<div class="brand">
+			<img src="logo nusteng.png" alt="Logo NUSTENG">
+			<span>SMK NUSANTARA 1 KOTA TANGERANG</span>
+		</div>
+		<p class="eyebrow">Area admin</p>
+		<h1>Rekap Presensi</h1>
+		<p class="intro">Masuk untuk melihat rekap kehadiran siswa.</p>
+		<form id="admin-login-form">
+			<div class="field">
+				<label for="username">Username</label>
+				<input id="username" name="username" autocomplete="username" required>
+			</div>
+			<div class="field">
+				<label for="password">Password</label>
+				<input id="password" name="password" type="password" autocomplete="current-password" required>
+			</div>
+			<button type="submit">Masuk</button>
+			<p class="message" id="login-message" role="alert" aria-live="polite"></p>
+		</form>
+		<a class="back-link" href="index.html">Kembali ke Absensi</a>
+	</main>
+	<script>
+		const adminSessionKey = "adminRecapLoggedIn";
+		const adminUsername = "absenGHZ";
+		const adminPassword = "ghaeza0410";
+		const loginForm = document.getElementById("admin-login-form");
+		const loginMessage = document.getElementById("login-message");
+
+		if (sessionStorage.getItem(adminSessionKey) === "true") {
+			window.location.replace("rekap-presensi.html");
+		}
+
+		loginForm.addEventListener("submit", (event) => {
+			event.preventDefault();
+			const username = document.getElementById("username").value.trim();
+			const password = document.getElementById("password").value;
+			if (username !== adminUsername || password !== adminPassword) {
+				loginMessage.textContent = "Username atau password salah.";
+				return;
+			}
+
+			sessionStorage.setItem(adminSessionKey, "true");
+			window.location.assign("rekap-presensi.html");
+		});
+	</script>
+</body>
+</html>

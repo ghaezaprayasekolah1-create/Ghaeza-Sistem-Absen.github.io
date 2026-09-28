@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="robots" content="noindex, nofollow">
+	<title>Rekap Presensi | SMK NUSANTARA 1 KOTA TANGERANG</title>
+	<style>
+		:root {
+			--navy: #14243b;
+			--blue: #2f6fed;
+			--ink: #172235;
+			--muted: #708096;
+			--line: #dce5f0;
+			--white: #ffffff;
+			--green: #18875b;
+		}
+
+		* { box-sizing: border-box; }
+		body { min-height: 100vh; margin: 0; padding: 24px 20px 52px; color: var(--ink); font-family: "Trebuchet MS", "Segoe UI", sans-serif; background: linear-gradient(135deg, #f3f7fc 0%, #e9f0f9 48%, #dbe8f7 100%); }
+		.page { width: min(100%, 1100px); margin: auto; }
+		.topbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 26px; }
+		.brand { display: flex; align-items: center; gap: 12px; color: var(--navy); font-size: 13px; font-weight: 800; letter-spacing: .04em; }
+		.brand img { width: 38px; height: 38px; object-fit: contain; }
+		.actions { display: flex; flex-wrap: wrap; gap: 9px; }
+		button, .back-link { display: inline-flex; align-items: center; justify-content: center; padding: 10px 14px; border: 0; border-radius: 8px; cursor: pointer; font: inherit; font-size: 12px; font-weight: 800; text-decoration: none; }
+		.primary { color: var(--white); background: var(--blue); }
+		.primary:hover { background: #245bc9; }
+		.secondary, .back-link { color: var(--navy); background: #edf2f8; }
+		.secondary:hover, .back-link:hover { background: #dfe8f3; }
+		.panel { padding: 28px; background: var(--white); border: 1px solid rgba(255, 255, 255, .8); border-radius: 16px; box-shadow: 0 18px 46px rgba(35, 62, 101, .12); }
+		h1 { margin: 0 0 6px; color: var(--navy); font-family: Georgia, serif; font-size: 36px; font-weight: 500; }
+		.intro { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+		.summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 24px 0; }
+		.metric { padding: 16px 0; border-top: 2px solid var(--line); }
+		.metric strong { display: block; color: var(--navy); font-size: 28px; line-height: 1.15; }
+		.metric span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; font-weight: 700; }
+		.toolbar { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 14px; padding: 16px 0; border-top: 1px solid var(--line); }
+		.search-field { display: grid; flex: 1; min-width: min(100%, 260px); gap: 6px; }
+		label { color: var(--navy); font-size: 12px; font-weight: 800; }
+		input { width: 100%; padding: 11px 12px; color: var(--ink); background: #fbfdff; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+		input:focus { outline: 3px solid #d5e3ff; border-color: var(--blue); }
+		.results-count { margin: 0; color: var(--muted); font-size: 12px; }
+		.table-wrap { overflow-x: auto; }
+		table { width: 100%; border-collapse: collapse; font-size: 13px; }
+		th, td { padding: 11px 9px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
+		th { color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+		.photo { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; vertical-align: middle; }
+		.status { color: var(--green); font-weight: 800; }
+		.empty { margin: 20px 0 0; color: var(--muted); font-size: 13px; }
+		main[hidden] { display: none; }
+		@media (max-width: 600px) { body { padding: 18px 12px 36px; } .topbar { align-items: flex-start; flex-direction: column; } .panel { padding: 21px 17px; } h1 { font-size: 31px; } .summary { gap: 12px; } }
+	</style>
+</head>
+<body>
+	<main class="page" id="recap-page" hidden>
+		<header class="topbar">
+			<div class="brand">
+				<img src="logo nusteng.png" alt="Logo NUSTENG">
+				<span>SMK NUSANTARA 1 KOTA TANGERANG</span>
+			</div>
+			<nav class="actions" aria-label="Navigasi admin">
+				<a class="back-link" href="index.html">Kembali ke Absensi</a>
+				<button class="secondary" id="logout-button" type="button">Keluar Admin</button>
+			</nav>
+		</header>
+		<section class="panel" aria-labelledby="page-title">
+			<h1 id="page-title">Rekap Presensi</h1>
+			<p class="intro">Daftar seluruh presensi yang tersimpan di browser ini.</p>
+			<div class="summary" aria-live="polite">
+				<div class="metric"><strong id="total-attendances">0</strong><span>Total presensi</span></div>
+				<div class="metric"><strong id="unique-students">0</strong><span>Siswa tercatat</span></div>
+			</div>
+			<div class="toolbar">
+				<div class="search-field">
+					<label for="search-input">Cari nama, NIS, atau nomor kartu</label>
+					<input id="search-input" type="search" autocomplete="off">
+				</div>
+				<button class="primary" id="export-button" type="button">Unduh CSV</button>
+			</div>
+			<p class="results-count" id="results-count" aria-live="polite"></p>
+			<div class="table-wrap">
+				<table>
+					<thead>
+						<tr><th>Foto</th><th>Nama</th><th>NIS</th><th>Nomor Kartu</th><th>Kelas</th><th>Status</th><th>Tanggal</th><th>Waktu</th></tr>
+					</thead>
+					<tbody id="attendance-list"></tbody>
+				</table>
+				<p class="empty" id="empty-message" hidden>Belum ada presensi yang tercatat.</p>
+			</div>
+		</section>
+	</main>
+	<script>
+		const sessionKey = "adminRecapLoggedIn";
+		const historyKey = "riwayatPresensi";
+		const recapPage = document.getElementById("recap-page");
+		if (sessionStorage.getItem(sessionKey) !== "true") {
+			window.location.replace("login-rekap.html");
+		} else {
+			recapPage.hidden = false;
+		}
+
+		const attendanceList = document.getElementById("attendance-list");
+		const emptyMessage = document.getElementById("empty-message");
+		const searchInput = document.getElementById("search-input");
+		const resultsCount = document.getElementById("results-count");
+		let attendanceRecords = [];
+
+		function readAttendanceRecords() {
+			try {
+				const records = JSON.parse(localStorage.getItem(historyKey));
+				return Array.isArray(records) ? records : [];
+			} catch (error) {
+				return [];
+			}
+		}
+
+		function renderAttendance() {
+			const query = searchInput.value.trim().toLocaleLowerCase("id-ID");
+			const filteredRecords = attendanceRecords
+				.map((record, index) => ({ ...record, index }))
+				.filter((record) => [record.name, record.nis, record.cardNumber, record.className]
+					.some((value) => String(value || "").toLocaleLowerCase("id-ID").includes(query)))
+				.reverse();
+			const studentIds = new Set(attendanceRecords.map((record) => record.nis));
+			document.getElementById("total-attendances").textContent = attendanceRecords.length;
+			document.getElementById("unique-students").textContent = studentIds.size;
+			resultsCount.textContent = `${filteredRecords.length} dari ${attendanceRecords.length} presensi ditampilkan`;
+			emptyMessage.hidden = filteredRecords.length > 0;
+			attendanceList.replaceChildren();
+
+			filteredRecords.forEach((record) => {
+				const row = document.createElement("tr");
+				const photoCell = document.createElement("td");
+				const photo = document.createElement("img");
+				photo.className = "photo";
+				photo.src = record.photo || "FOTO SISWA/esokkoloh.jpg";
+				photo.alt = `Foto siswa ${record.name || ""}`;
+				photoCell.appendChild(photo);
+				row.appendChild(photoCell);
+				const values = [record.name, record.nis, record.cardNumber || "-", record.className, record.status || "Hadir", record.date, record.time];
+				values.forEach((value, index) => {
+					const cell = document.createElement("td");
+					cell.textContent = value || "-";
+					if (index === 4) cell.className = "status";
+					row.appendChild(cell);
+				});
+				attendanceList.appendChild(row);
+			});
+		}
+
+		searchInput.addEventListener("input", renderAttendance);
+		document.getElementById("export-button").addEventListener("click", () => {
+			const query = searchInput.value.trim().toLocaleLowerCase("id-ID");
+			const recordsToExport = attendanceRecords.filter((record) => [record.name, record.nis, record.cardNumber, record.className]
+				.some((value) => String(value || "").toLocaleLowerCase("id-ID").includes(query)));
+			const headers = ["Nama", "NIS", "Nomor Kartu", "Kelas", "Status", "Tanggal", "Waktu"];
+			const csvValue = (value) => `"${String(value || "").replace(/"/g, '""')}"`;
+			const csv = [headers, ...recordsToExport.map((record) => [record.name, record.nis, record.cardNumber, record.className, record.status || "Hadir", record.date, record.time])]
+				.map((row) => row.map(csvValue).join(","))
+				.join("\r\n");
+			const downloadUrl = URL.createObjectURL(new Blob(["\ufeff", csv], { type: "text/csv;charset=utf-8" }));
+			const downloadLink = document.createElement("a");
+			downloadLink.href = downloadUrl;
+			downloadLink.download = "rekap-presensi.csv";
+			downloadLink.click();
+			URL.revokeObjectURL(downloadUrl);
+		});
+		document.getElementById("logout-button").addEventListener("click", () => {
+			sessionStorage.removeItem(sessionKey);
+			window.location.replace("index.html");
+		});
+
+		attendanceRecords = readAttendanceRecords();
+		renderAttendance();
+	</script>
+</body>
+</html>

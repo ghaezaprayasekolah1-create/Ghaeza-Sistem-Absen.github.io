@@ -524,31 +524,7 @@
  
 		</section>
 
-		<section class="attendance-history" aria-labelledby="attendance-history-title">
-			<h2 id="attendance-history-title">Riwayat Presensi</h2>
-			<p class="management-description">Daftar kehadiran siswa yang sudah tercatat di browser ini.</p>
-			<div class="history-table-wrap">
-				<table class="history-table">
-					<thead>
-						<tr><th>Foto</th><th>Nama</th><th>NIS</th><th>Nomor Kartu</th><th>Kelas</th><th>Status</th><th>Tanggal</th><th>Waktu</th><th>Aksi</th></tr>
-					</thead>
-					<tbody id="attendance-history-list"></tbody>
-				</table>
-				<p class="history-empty" id="history-empty">Belum ada riwayat presensi.</p>
-			</div>
-		</section>
 	</main>
-
-	<div class="confirm-modal" id="confirm-modal" role="presentation" hidden>
-		<section class="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-description">
-			<h2 id="confirm-title">Yakin ingin hapus?</h2>
-			<p id="confirm-description"></p>
-			<div class="confirm-actions">
-				<button class="confirm-button cancel-button" id="cancel-delete" type="button">Batal</button>
-				<button class="confirm-button confirm-delete-button" id="confirm-delete" type="button">Hapus</button>
-			</div>
-		</section>
-	</div>
 
 	<script>
 		const studentsStorageKey = "dataSiswa";
@@ -573,14 +549,6 @@
 		const idForm = document.getElementById("id-form");
 		const attendanceIdInput = document.getElementById("attendance-id");
 		const idMessage = document.getElementById("id-message");
-		const confirmModal = document.getElementById("confirm-modal");
-		const confirmTitle = document.getElementById("confirm-title");
-		const confirmDescription = document.getElementById("confirm-description");
-		const cancelDeleteButton = document.getElementById("cancel-delete");
-		const confirmDeleteButton = document.getElementById("confirm-delete");
-		const attendanceHistoryList = document.getElementById("attendance-history-list");
-		const historyEmpty = document.getElementById("history-empty");
-		let historyIndexToDelete = null;
 		let attendanceResetTimer = null;
 		const attendanceElements = {
 			eyebrow: document.getElementById("attendance-eyebrow"),
@@ -659,93 +627,20 @@
 			}
 		}
 
-		function renderAttendanceHistory() {
-			const history = getAttendanceHistory();
-			const summarizedHistory = new Map();
-			history.forEach((record) => {
-				const existingRecord = summarizedHistory.get(record.nis);
-				summarizedHistory.set(record.nis, {
-					...record,
-					attendanceCount: (existingRecord?.attendanceCount || 0) + 1,
-					latestIndex: history.indexOf(record)
-				});
-			});
-			attendanceHistoryList.replaceChildren();
-			historyEmpty.hidden = summarizedHistory.size > 0;
-
-			[...summarizedHistory.values()].reverse().forEach((record) => {
-				const row = document.createElement("tr");
-				const photoCell = document.createElement("td");
-				const photo = document.createElement("img");
-				photo.className = "history-photo";
-				photo.src = record.photo || "FOTO SISWA/esokkoloh.jpg";
-				photo.alt = `Foto siswa ${record.name}`;
-				photoCell.appendChild(photo);
-				const actionCell = document.createElement("td");
-				const deleteHistoryButton = document.createElement("button");
-				deleteHistoryButton.type = "button";
-				deleteHistoryButton.className = "delete-student-button delete-history-button";
-				deleteHistoryButton.dataset.historyIndex = record.latestIndex;
-				deleteHistoryButton.textContent = "Hapus";
-				deleteHistoryButton.setAttribute("aria-label", `Hapus presensi terbaru ${record.name}`);
-				actionCell.appendChild(deleteHistoryButton);
-				row.appendChild(photoCell);
-				const displayValues = [record.name, record.nis, record.cardNumber || "-", record.className, record.status || "Hadir", record.date, record.time];
-				displayValues.forEach((value) => {
-					const cell = document.createElement("td");
-					cell.textContent = value;
-					row.appendChild(cell);
-				});
-				row.appendChild(actionCell);
-				attendanceHistoryList.appendChild(row);
-			});
-		}
-
-		attendanceHistoryList.addEventListener("click", (event) => {
-			const deleteButton = event.target.closest(".delete-history-button");
-			if (!deleteButton) return;
-
-			const history = getAttendanceHistory();
-			const historyIndex = Number(deleteButton.dataset.historyIndex);
-			const record = history[historyIndex];
-			if (!record) return;
-
-			historyIndexToDelete = historyIndex;
-			confirmTitle.textContent = "Yakin ingin hapus?";
-			confirmDescription.textContent = `Presensi ${record.name} pada ${record.date} akan dihapus.`;
-			confirmModal.hidden = false;
-			confirmDeleteButton.focus();
-		});
-
-		function closeDeleteModal() {
-			confirmModal.hidden = true;
-			historyIndexToDelete = null;
-		}
-
-		cancelDeleteButton.addEventListener("click", closeDeleteModal);
-		confirmModal.addEventListener("click", (event) => {
-			if (event.target === confirmModal) closeDeleteModal();
-		});
-		document.addEventListener("keydown", (event) => {
-			if (event.key === "Escape" && !confirmModal.hidden) closeDeleteModal();
-		});
-
-		confirmDeleteButton.addEventListener("click", () => {
-			if (historyIndexToDelete !== null) {
-				const history = getAttendanceHistory();
-				history.splice(historyIndexToDelete, 1);
-				if (saveAttendanceHistory(history)) {
-					renderAttendanceHistory();
-				}
-				closeDeleteModal();
-				return;
-			}
-		});
-
 		function recordAttendance(student) {
 			const now = new Date();
-			clearTimeout(attendanceResetTimer);
 			const date = now.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+			const dateKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+			const history = getAttendanceHistory();
+			const alreadyAttended = history.some((record) =>
+				record.nis === student.nis && (record.dateKey === dateKey || record.date === date)
+			);
+			if (alreadyAttended) {
+				showMessage(idMessage, `${student.name} sudah ter absen.`, true);
+				return;
+			}
+
+			clearTimeout(attendanceResetTimer);
 			const time = `${now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })} WIB`;
 			const attendanceRecord = {
 				name: student.name,
@@ -755,9 +650,13 @@
 				status: "Hadir",
 				photo: student.photo || "FOTO SISWA/esokkoloh.jpg",
 				date,
+				dateKey,
 				time,
 			};
-			saveAttendanceHistory([...getAttendanceHistory(), attendanceRecord]);
+			if (!saveAttendanceHistory([...history, attendanceRecord])) {
+				showMessage(idMessage, "Presensi gagal disimpan di browser ini.", true);
+				return;
+			}
 			attendanceCard.classList.add("is-complete");
 			attendanceElements.eyebrow.textContent = "Konfirmasi kehadiran";
 			attendanceElements.title.textContent = "Absensi Berhasil";
@@ -772,7 +671,7 @@
 			attendanceElements.status.textContent = attendanceRecord.status;
 			attendanceElements.date.textContent = date;
 			attendanceElements.time.textContent = time;
-			renderAttendanceHistory();
+			showMessage(idMessage, "");
 			attendanceResetTimer = setTimeout(resetAttendanceView, 10000);
 		}
 
@@ -829,7 +728,6 @@
 			attendanceResetTimer = setTimeout(resetAttendanceView, 10000);
 		});
 
-		renderAttendanceHistory();
 	</script>
 </body>
 </html>
