@@ -260,7 +260,8 @@
 		});
 		document.getElementById("logout-button").addEventListener("click", () => {
 			sessionStorage.removeItem(sessionKey);
-			window.location.replace("index.html");
+			sessionStorage.removeItem("adminLoggedIn");
+			window.location.replace("login-admin.html");
 		});
 
 		attendanceRecords = readAttendanceRecords();
