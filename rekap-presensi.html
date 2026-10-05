@@ -115,11 +115,11 @@
 		</section>
 	</div>
 	<script>
-		const sessionKey = "adminRecapLoggedIn";
+		const sessionKey = "adminLoggedIn";
 		const historyKey = "riwayatPresensi";
 		const recapPage = document.getElementById("recap-page");
 		if (sessionStorage.getItem(sessionKey) !== "true") {
-			window.location.replace("login-rekap.html");
+			window.location.replace("login-admin.html");
 		} else {
 			recapPage.hidden = false;
 		}
