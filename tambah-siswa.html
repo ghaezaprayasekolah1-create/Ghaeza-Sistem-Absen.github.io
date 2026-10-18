@@ -109,8 +109,8 @@
 					<input id="major" name="major" required>
 				</div>
 				<div class="field full">
-					<label for="photo">Upload foto siswa (opsional)</label>
-					<input id="photo" name="photo" type="file" accept="image/*">
+					<label for="photo">Pilih file foto siswa (opsional)</label>
+					<input id="photo" name="photo" type="file">
 				</div>
 				<div class="actions">
 					<button id="submit-button" type="submit">Simpan Data Siswa</button>
@@ -312,6 +312,10 @@
 			}
 			const formData = new FormData(studentForm);
 			const photoFile = photoInput.files[0];
+			if (photoFile && !photoFile.type.startsWith("image/")) {
+				showFormMessage("Pilih file foto berupa gambar.", true);
+				return;
+			}
 			const student = {
 				name: formData.get("name").trim(),
 				nis: formData.get("nis").trim(),

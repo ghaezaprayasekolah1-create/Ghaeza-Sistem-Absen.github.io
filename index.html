@@ -9,7 +9,6 @@
 			--navy: #14243b;
 			--blue: #2f6fed;
 			--sky: #eaf2ff;
-			--green: #18875b;
 			--ink: #172235;
 			--muted: #708096;
 			--line: #dce5f0;
@@ -105,8 +104,7 @@
 
 		.attendance-card.is-complete .tap-panel { display: none; }
 
-		.attendance-card:not(.is-complete) .card-body,
-		.attendance-card:not(.is-complete) .barcode { display: none; }
+		.attendance-card:not(.is-complete) .card-body { display: none; }
 
 		.tap-panel {
 			display: grid;
@@ -171,6 +169,10 @@
 			color: var(--muted);
 			font-size: 11px;
 		}
+
+		.nfc-controls { display: grid; gap: 8px; max-width: 380px; margin: 16px auto 0; }
+		.nfc-status { min-height: 18px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+		.nfc-status.error { color: #b33a3a; }
 
 		.id-form {
 			display: flex;
@@ -295,100 +297,11 @@
 
 		dd { margin: 0; font-size: 15px; font-weight: 700; }
 
-		.barcode {
-			position: absolute;
-			right: 28px;
-			bottom: 22px;
-			width: 102px;
-			padding: 8px 8px 5px;
-			background: var(--white);
-			border: 1px solid var(--line);
-			border-radius: 5px;
-			box-shadow: 0 7px 18px rgba(30, 55, 90, .12);
-		}
-
-		.barcode-lines {
-			height: 28px;
-			background: repeating-linear-gradient(90deg, #152238 0 2px, transparent 2px 4px, #152238 4px 5px, transparent 5px 8px, #152238 8px 11px, transparent 11px 13px);
-		}
-
-		.barcode-text {
-			margin-top: 4px;
-			color: #52627a;
-			font-family: monospace;
-			font-size: 8px;
-			letter-spacing: 1px;
-			text-align: center;
-		}
-
-		.student-management {
-			width: min(100%, 760px);
-			margin-top: 22px;
-			padding: 28px;
-			background: var(--white);
-			border: 1px solid rgba(255, 255, 255, .8);
-			border-radius: 18px;
-			box-shadow: 0 14px 35px rgba(35, 62, 101, .1);
-		}
-
-		.student-management h2 { margin: 0 0 6px; font-size: 23px; }
-
 		.management-description {
 			margin: 0 0 20px;
 			color: var(--muted);
 			font-size: 13px;
 		}
-
-		.student-form {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 14px;
-		}
-
-		.form-field { display: grid; gap: 6px; }
-		.form-field.full-width { grid-column: 1 / -1; }
-
-		.form-field label {
-			color: var(--navy);
-			font-size: 12px;
-			font-weight: 800;
-		}
-
-		.form-field input,
-		.form-field select {
-			width: 100%;
-			padding: 11px 12px;
-			color: var(--ink);
-			background: #fbfdff;
-			border: 1px solid var(--line);
-			border-radius: 8px;
-			font: inherit;
-		}
-
-		.form-field input:focus,
-		.form-field select:focus { outline: 3px solid #d5e3ff; border-color: var(--blue); }
-
-		.form-actions { display: flex; align-items: center; gap: 12px; grid-column: 1 / -1; }
-
-		.form-message { margin: 0; color: var(--green); font-size: 12px; font-weight: 700; }
-		.form-message.error { color: #b33a3a; }
-
-		.student-list { display: grid; gap: 9px; margin: 22px 0 0; padding: 0; list-style: none; }
-
-		.student-list li {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			gap: 14px;
-			padding: 12px 14px;
-			background: var(--sky);
-			border-radius: 8px;
-			font-size: 13px;
-		}
-
-		.student-list-info { display: grid; flex: 1; gap: 3px; }
-		.student-list-photo { width: 42px; height: 42px; object-fit: cover; border-radius: 7px; }
-		.student-list small { color: var(--muted); }
 
 		.attendance-history {
 			width: min(100%, 760px);
@@ -468,14 +381,13 @@
 			h2 { margin-bottom: 20px; font-size: 24px; }
 			.detail { padding-top: 13px; padding-bottom: 13px; }
 			.detail:nth-child(even) { padding-left: 12px; }
-			.barcode { right: 25px; bottom: 25px; }
 		}
 	</style>
 </head>
 <body>
 	<header class="topbar">
 		<div class="brand">
-			<img class="brand-mark" src="logo nusteng.png" alt="Logo NUSTENG" style="object-fit: contain; width: 38px; height: 38px; background: transparent; border-radius: 0; box-shadow: none;">
+			<img class="brand-mark" src="logo nusteng.png" alt="Logo NUSTENG">
 			<span>SMK NUSANTARA 1 KOTA TANGERANG</span>
 		</div>
 		<div class="topbar-label">Sistem Absensi Siswa</div>
@@ -485,22 +397,25 @@
 		<section class="attendance-card" aria-labelledby="page-title">
 			<div class="card-head">
 				<p class="eyebrow" id="attendance-eyebrow">Siap menerima kartu</p>
-				<h1 id="page-title">Tap Kartu Absensi</h1>
+				<h1 id="page-title">Scan Kartu</h1>
 				<div class="success" id="attendance-message"><span class="success-icon">&#9675;</span> Menunggu kartu siswa</div>
 			</div>
 
-			<div class="tap-panel" id="tap-panel">
+			<div class="tap-panel">
 				<div>
 					<div class="reader-icon" aria-hidden="true">&#10539;</div>
-					<h2>Dekatkan kartu ke pembaca</h2>
-					<p>Pastikan kartu siswa berada di dekat area pembaca sampai data kehadiran berhasil dikenali.</p>
-					<button class="tap-button" id="tap-button" type="button">Simulasikan Tap Kartu</button>
-					<span class="tap-hint">Mode demo untuk pengujian tampilan</span>
+					<h2>Tempelkan kartu NFC 13,56 MHz</h2>
+					<p>Scan UID kartu NFC untuk mencatat kehadiran. Nomor kartu harus sudah terdaftar pada data siswa.</p>
+					<div class="nfc-controls">
+						<button class="tap-button" id="nfc-scan-button" type="button" aria-pressed="false">Mulai scan NFC</button>
+						<p class="nfc-status" id="nfc-status" role="status" aria-live="polite">Scan NFC tersedia di perangkat dan browser yang mendukung Web NFC.</p>
+					</div>
 					<form class="id-form" id="id-form">
 						<label class="sr-only" for="attendance-id">ID siswa</label>
-						<input id="attendance-id" type="text" autocomplete="off" placeholder="Masukkan nomor kartu / NIS" required>
+						<input id="attendance-id" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Scan kartu / masukkan NIS" required>
 						<button class="tap-button" type="submit">Absen</button>
 					</form>
+					<span class="tap-hint">Alternatif: gunakan pembaca USB mode keyboard yang mengirim Enter setelah UID.</span>
 					<p class="id-message" id="id-message" role="alert"></p>
 				</div>
 			</div>
@@ -553,6 +468,8 @@
 	<script>
 		const studentsStorageKey = "dataSiswa";
 		const attendanceHistoryStorageKey = "riwayatPresensi";
+		const nfcScanButton = document.getElementById("nfc-scan-button");
+		const nfcStatus = document.getElementById("nfc-status");
 		const studentPhotoFiles = [
 			"FOTO SISWA/AGNEL.jpg",
 			"FOTO SISWA/esokkoloh.jpg",
@@ -569,7 +486,6 @@
 			raka: "FOTO SISWA/RAKA.jpg"
 		};
 		const attendanceCard = document.querySelector(".attendance-card");
-		const tapButton = document.getElementById("tap-button");
 		const idForm = document.getElementById("id-form");
 		const attendanceIdInput = document.getElementById("attendance-id");
 		const idMessage = document.getElementById("id-message");
@@ -581,6 +497,7 @@
 		const confirmDeleteButton = document.getElementById("confirm-delete");
 		let attendanceResetTimer = null;
 		let historyIndexToDelete = null;
+		let nfcAbortController = null;
 		const attendanceElements = {
 			eyebrow: document.getElementById("attendance-eyebrow"),
 			title: document.getElementById("page-title"),
@@ -625,19 +542,83 @@
 			}
 		}
 
-		function saveStudents(students) {
-			try {
-				localStorage.setItem(studentsStorageKey, JSON.stringify(students));
-				return true;
-			} catch (error) {
-				return false;
-			}
-		}
-
 		function showMessage(element, message, isError = false) {
 			if (!element) return;
 			element.textContent = message;
 			element.classList.toggle("error", isError);
+		}
+
+		function readNfcIdentifier(event) {
+			if (event.serialNumber?.trim()) return event.serialNumber.trim();
+
+			for (const record of event.message.records) {
+				if (record.recordType === "text" && record.data) {
+					const identifier = new TextDecoder(record.encoding || "utf-8").decode(record.data).trim();
+					if (identifier) return identifier;
+				}
+			}
+			return "";
+		}
+
+		function stopNfcScan(message = "Scan NFC dihentikan.", isError = false) {
+			if (nfcAbortController) nfcAbortController.abort();
+			nfcAbortController = null;
+			nfcScanButton.textContent = "Mulai scan NFC";
+			nfcScanButton.setAttribute("aria-pressed", "false");
+			showMessage(nfcStatus, message, isError);
+		}
+
+		async function startNfcScan() {
+			if (!window.isSecureContext) {
+				showMessage(nfcStatus, "Web NFC perlu halaman HTTPS dan browser yang mendukung NFC.", true);
+				return;
+			}
+			if (!("NDEFReader" in window)) {
+				showMessage(nfcStatus, "Web NFC tidak didukung browser ini. Gunakan Android dengan Chrome atau pembaca USB.", true);
+				return;
+			}
+
+			const controller = new AbortController();
+			nfcAbortController = controller;
+			nfcScanButton.textContent = "Hentikan scan NFC";
+			nfcScanButton.setAttribute("aria-pressed", "true");
+			showMessage(nfcStatus, "Menunggu kartu NFC...");
+
+			try {
+				const reader = new NDEFReader();
+				reader.addEventListener("reading", (event) => {
+					if (nfcAbortController !== controller) return;
+					const identifier = readNfcIdentifier(event);
+					stopNfcScan(identifier ? "Kartu terbaca." : "UID tidak tersedia. Pastikan tag mendukung NDEF.", !identifier);
+					if (!identifier) {
+						showMessage(idMessage, "UID kartu NFC tidak dapat dibaca.", true);
+						return;
+					}
+
+					attendanceIdInput.value = identifier;
+					processAttendanceIdentifier(identifier);
+				}, { signal: controller.signal });
+				reader.addEventListener("readingerror", () => {
+					showMessage(nfcStatus, "Tag tidak dapat dibaca. Pastikan kartu kompatibel dengan NDEF.", true);
+				});
+				await reader.scan({ signal: controller.signal });
+			} catch (error) {
+				if (nfcAbortController !== controller) return;
+				stopNfcScan(`Scan NFC gagal: ${error.message || "izin atau perangkat tidak tersedia."}`, true);
+			}
+		}
+
+		function processAttendanceIdentifier(identifier) {
+			const enteredId = String(identifier || "").trim();
+			const student = getStudents().find((savedStudent) => savedStudent.nis === enteredId || savedStudent.cardNumber === enteredId);
+
+			if (!student) {
+				showMessage(idMessage, "UID / NIS belum terdaftar. Tambahkan data siswa terlebih dahulu.", true);
+				return;
+			}
+
+			showMessage(idMessage, "");
+			recordAttendance(student);
 		}
 
 		function getAttendanceHistory() {
@@ -785,7 +766,7 @@
 		function resetAttendanceView() {
 			attendanceCard.classList.remove("is-complete");
 			attendanceElements.eyebrow.textContent = "Siap menerima kartu";
-			attendanceElements.title.textContent = "Tap Kartu Absensi";
+			attendanceElements.title.textContent = "Scan Kartu NFC";
 			attendanceElements.message.innerHTML = '<span class="success-icon">&#9675;</span> Menunggu kartu siswa';
 			attendanceElements.photo.src = "FOTO SISWA/esokkoloh.jpg";
 			attendanceElements.photo.alt = "Foto siswa terpilih";
@@ -800,42 +781,21 @@
 			attendanceIdInput.value = "";
 			showMessage(idMessage, "");
 			attendanceResetTimer = null;
+			if (!("NDEFReader" in window) || !navigator.maxTouchPoints) attendanceIdInput.focus();
 		}
 
 		idForm.addEventListener("submit", (event) => {
 			event.preventDefault();
-			const enteredId = attendanceIdInput.value.trim();
-			const student = getStudents().find((savedStudent) => savedStudent.nis === enteredId || savedStudent.cardNumber === enteredId);
-
-			if (!student) {
-				showMessage(idMessage, "ID / NIS belum terdaftar. Tambahkan data siswa terlebih dahulu.", true);
-				return;
-			}
-
-			showMessage(idMessage, "");
-			recordAttendance(student);
+			processAttendanceIdentifier(attendanceIdInput.value);
 		});
 
-		tapButton.addEventListener("click", () => {
-			clearTimeout(attendanceResetTimer);
-			attendanceCard.classList.add("is-complete");
-			attendanceElements.eyebrow.textContent = "Fitur dalam pengembangan";
-			attendanceElements.title.textContent = "Coming Soon";
-			attendanceElements.message.innerHTML = '<span class="success-icon">&#9675;</span> Simulasi tap kartu segera hadir';
-			attendanceElements.photo.src = "FOTO SISWA/esokkoloh.jpg";
-			attendanceElements.photo.alt = "Simulasi tap kartu segera hadir";
-			attendanceElements.name.textContent = "Simulasi Tap Kartu";
-			attendanceElements.nis.textContent = "-";
-			attendanceElements.className.textContent = "-";
-			attendanceElements.major.textContent = "-";
-			attendanceElements.cardNumber.textContent = "-";
-			attendanceElements.status.textContent = "-";
-			attendanceElements.date.textContent = "-";
-			attendanceElements.time.textContent = "-";
-			attendanceResetTimer = setTimeout(resetAttendanceView, 10000);
+		nfcScanButton.addEventListener("click", () => {
+			if (nfcAbortController) stopNfcScan();
+			else startNfcScan();
 		});
 
 		renderAttendanceHistory();
+		if (!("NDEFReader" in window) || !navigator.maxTouchPoints) attendanceIdInput.focus();
 	</script>
 </body>
 </html>
